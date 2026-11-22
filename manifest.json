@@ -1,0 +1,32 @@
+{
+  "name": "Калькулятор итоговой оценки",
+  "short_name": "Оценки",
+  "description": "Расчёт итоговой оценки по дисциплине: Р1 30% + Р2 30% + экзамен 40%",
+  "lang": "ru",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0f16",
+  "theme_color": "#0d0f16",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

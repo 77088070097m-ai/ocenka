@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор итоговой оценки</title>
+
+<meta name="description" content="Расчёт итоговой оценки по дисциплине: Р1 30% + Р2 30% + экзамен 40%.">
+<meta name="theme-color" content="#0d0f16">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Оценки">
+
+<style>
+  @property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
+
+  :root {
+    --bg: #0d0f16;
+    --card: #161a24;
+    --card2: #1d2230;
+    --line: #2a3040;
+    --text: #eef1f7;
+    --muted: #98a1b3;
+    --accent: #6c8cff;
+    --good: #3ddc97;
+    --warn: #ffc857;
+    --bad: #ff6b6b;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(108,140,255,.22), transparent 60%),
+      radial-gradient(700px 500px at 90% 0%, rgba(61,220,151,.12), transparent 55%),
+      var(--bg);
+  }
+
+  .app { max-width: 980px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 26px; }
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 3.4vw, 32px);
+    letter-spacing: -0.02em;
+  }
+  .formula {
+    display: inline-block;
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255,255,255,.03);
+    color: var(--muted);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .formula b { color: var(--text); font-weight: 600; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0)) , var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+
+  .card-title {
+    margin: 0 0 18px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---------- inputs ---------- */
+  .field { margin-bottom: 22px; }
+  .field:last-child { margin-bottom: 4px; }
+
+  .field-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .field-name { font-size: 15px; font-weight: 600; }
+  .field-name small {
+    display: block;
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .weight {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(108,140,255,.12);
+    border: 1px solid rgba(108,140,255,.25);
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .field-row { display: flex; align-items: center; gap: 14px; }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent) var(--fill, 0%), #2a3040 var(--fill, 0%));
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid var(--accent);
+    box-shadow: 0 2px 10px rgba(0,0,0,.5);
+    transition: transform .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.12); }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid var(--accent);
+  }
+
+  input[type="number"] {
+    width: 74px;
+    padding: 9px 8px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,140,255,.18);
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
+
+  /* ---------- result ---------- */
+  .result-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 18px;
+    background:
+      radial-gradient(400px 220px at 50% 0%, rgba(108,140,255,.14), transparent 70%),
+      var(--card);
+  }
+
+  .gauge {
+    --p: 0;
+    --gauge-color: var(--accent);
+    position: relative;
+    width: 176px;
+    height: 176px;
+    border-radius: 50%;
+    background: conic-gradient(var(--gauge-color) calc(var(--p) * 1%), #252b3a 0);
+    display: grid;
+    place-items: center;
+    transition: --p .45s ease, background .35s;
+  }
+  .gauge::before {
+    content: "";
+    position: absolute;
+    inset: 13px;
+    border-radius: 50%;
+    background: var(--card);
+    box-shadow: inset 0 0 24px rgba(0,0,0,.45);
+  }
+  .gauge-inner { position: relative; line-height: 1; }
+  .score-num {
+    font-size: 46px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-num small { font-size: 20px; font-weight: 600; color: var(--muted); }
+  .score-cap { margin-top: 6px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+  .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 86px;
+    padding: 9px 12px;
+    border-radius: 13px;
+    background: var(--card2);
+    border: 1px solid var(--line);
+  }
+  .badge b { font-size: 19px; line-height: 1.15; }
+  .badge span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-top: 3px; }
+
+  .scholarship {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .scholarship.ok { color: #bff5dd; background: rgba(61,220,151,.12); border-color: rgba(61,220,151,.35); }
+  .scholarship.mid { color: #ffe6ae; background: rgba(255,200,87,.12); border-color: rgba(255,200,87,.35); }
+  .scholarship.bad { color: #ffc9c9; background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.35); }
+
+  .exact { font-size: 12px; color: var(--muted); }
+
+  /* ---------- target ---------- */
+  .target { margin-top: 16px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .chip {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .chip:hover { color: var(--text); border-color: #3a4256; }
+  .chip.active {
+    color: #fff;
+    background: rgba(108,140,255,.2);
+    border-color: var(--accent);
+  }
+
+  .target-out {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--card2);
+    border: 1px solid var(--line);
+  }
+  .target-num {
+    flex: none;
+    min-width: 78px;
+    text-align: center;
+    font-size: 34px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .target-text { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+  .target-text b { color: var(--text); }
+  .target-text .hint { display: block; margin-top: 4px; font-size: 12px; opacity: .85; }
+
+  /* ---------- table ---------- */
+  .table-wrap { margin-top: 16px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid rgba(42,48,64,.55); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .2s; }
+  tbody tr.active {
+    background: rgba(108,140,255,.14);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  tbody tr.active td:first-child { font-weight: 700; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.letter { font-weight: 700; }
+
+  footer {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .reset {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .reset:hover { color: var(--text); border-color: #3a4256; background: rgba(255,255,255,.03); }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <h1>Калькулятор итоговой оценки</h1>
+    <div class="formula"><b>И%</b> = Р1×30% + Р2×30% + Э×40%</div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2 class="card-title">Оценки</h2>
+
+      <div class="field">
+        <div class="field-head">
+          <div class="field-name">Рейтинг 1 <small>ВСК1</small></div>
+          <div class="weight">30%</div>
+        </div>
+        <div class="field-row">
+          <input type="range" id="r1-range" min="0" max="100" step="1" value="80" aria-label="Рейтинг 1">
+          <input type="number" id="r1-num" min="0" max="100" step="1" value="80" aria-label="Рейтинг 1, баллы">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <div class="field-name">Рейтинг 2 <small>ВСК2</small></div>
+          <div class="weight">30%</div>
+        </div>
+        <div class="field-row">
+          <input type="range" id="r2-range" min="0" max="100" step="1" value="80" aria-label="Рейтинг 2">
+          <input type="number" id="r2-num" min="0" max="100" step="1" value="80" aria-label="Рейтинг 2, баллы">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <div class="field-name">Экзамен <small>Э</small></div>
+          <div class="weight">40%</div>
+        </div>
+        <div class="field-row">
+          <input type="range" id="e-range" min="0" max="100" step="1" value="80" aria-label="Экзамен">
+          <input type="number" id="e-num" min="0" max="100" step="1" value="80" aria-label="Экзамен, баллы">
+        </div>
+      </div>
+
+      <button class="reset" id="reset">Сбросить значения</button>
+    </div>
+
+    <div class="card result-card">
+      <h2 class="card-title" style="margin-bottom:0">Итог</h2>
+
+      <div class="gauge" id="gauge">
+        <div class="gauge-inner">
+          <div class="score-num"><span id="score-val">0</span><small>%</small></div>
+          <div class="score-cap">итоговый балл</div>
+        </div>
+      </div>
+
+      <div class="badges">
+        <div class="badge"><b id="b-gpa">—</b><span>Цифровой</span></div>
+        <div class="badge"><b id="b-letter">—</b><span>Буква</span></div>
+        <div class="badge"><b id="b-trad" style="font-size:14px">—</b><span>Оценка</span></div>
+      </div>
+
+      <div class="scholarship ok" id="scholarship">Стипендия сохраняется</div>
+      <div class="exact" id="exact">точный расчёт: 0%</div>
+    </div>
+  </section>
+
+  <section class="card target">
+    <h2 class="card-title">Что нужно на экзамене</h2>
+
+    <div class="chips" id="chips">
+      <button class="chip" data-target="50">Сдать — 50%</button>
+      <button class="chip active" data-target="70">Стипендия — 70%</button>
+      <button class="chip" data-target="90">Отлично — 90%</button>
+      <button class="chip" data-target="95">Максимум — 95%</button>
+    </div>
+
+    <div class="target-out">
+      <div class="target-num" id="target-num">—</div>
+      <div class="target-text" id="target-text">
+        Выберите цель, чтобы узнать минимальный балл за экзамен.
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 0; margin-top: 16px;">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Итог, баллы</th>
+            <th>Цифровой</th>
+            <th>Буква</th>
+            <th>Традиционная</th>
+          </tr>
+        </thead>
+        <tbody id="scale-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Итоговая оценка округляется до целого числа.<br>
+    70% и выше — оценка «хорошо» и выше, денежная стипендия сохраняется.
+  </footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const SCALE = [
+    { min: 95, max: 100, gpa: 4.0,  letter: "A",  trad: "Отлично" },
+    { min: 90, max: 94,  gpa: 3.67, letter: "A-", trad: "Отлично" },
+    { min: 85, max: 89,  gpa: 3.33, letter: "B+", trad: "Хорошо" },
+    { min: 80, max: 84,  gpa: 3.0,  letter: "B",  trad: "Хорошо" },
+    { min: 75, max: 79,  gpa: 2.67, letter: "B-", trad: "Хорошо" },
+    { min: 70, max: 74,  gpa: 2.33, letter: "C+", trad: "Хорошо" },
+    { min: 65, max: 69,  gpa: 2.0,  letter: "C",  trad: "Удовлетворительно" },
+    { min: 60, max: 64,  gpa: 1.67, letter: "C-", trad: "Удовлетворительно" },
+    { min: 55, max: 59,  gpa: 1.33, letter: "D+", trad: "Удовлетворительно" },
+    { min: 50, max: 54,  gpa: 1.0,  letter: "D",  trad: "Удовлетворительно" },
+    { min: 25, max: 49,  gpa: 0.5,  letter: "FX", trad: "Неудовлетворительно" },
+    { min: 0,  max: 24,  gpa: 0,    letter: "F",  trad: "Неудовлетворительно" },
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const pairs = ["r1", "r2", "e"].map((k) => ({
+    range: $(k + "-range"),
+    num: $(k + "-num"),
+  }));
+
+  const gauge = $("gauge");
+  const scoreVal = $("score-val");
+  const bGpa = $("b-gpa");
+  const bLetter = $("b-letter");
+  const bTrad = $("b-trad");
+  const scholarship = $("scholarship");
+  const exact = $("exact");
+  const targetNum = $("target-num");
+  const targetText = $("target-text");
+  const chips = [...document.querySelectorAll(".chip")];
+
+  const body = $("scale-body");
+  SCALE.forEach((row, i) => {
+    const tr = document.createElement("tr");
+    tr.dataset.index = i;
+    tr.innerHTML =
+      `<td class="num">${row.min}–${row.max}</td>` +
+      `<td class="num">${row.gpa.toFixed(2).replace(".", ",")}</td>` +
+      `<td class="letter">${row.letter}</td>` +
+      `<td>${row.trad}</td>`;
+    body.appendChild(tr);
+  });
+
+  const clamp = (v) => Math.min(100, Math.max(0, Number.isFinite(v) ? v : 0));
+  const fmt = (v) => v.toFixed(1).replace(".", ",");
+
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem("grade-calc") || "{}"); }
+    catch { return {}; }
+  })();
+
+  let target = Number(saved.target) || 70;
+
+  function readValues() {
+    return pairs.map((p) => clamp(Number(p.num.value)));
+  }
+
+  function gradeFor(score) {
+    return SCALE.find((r) => score >= r.min && score <= r.max) || SCALE[SCALE.length - 1];
+  }
+
+  function colorFor(score) {
+    if (score >= 70) return "var(--good)";
+    if (score >= 50) return "var(--warn)";
+    return "var(--bad)";
+  }
+
+  function update() {
+    const [r1, r2, e] = readValues();
+
+    pairs.forEach((p) => {
+      const v = clamp(Number(p.num.value));
+      p.range.value = v;
+      p.range.style.setProperty("--fill", v + "%");
+    });
+
+    const raw = r1 * 0.3 + r2 * 0.3 + e * 0.4;
+    const score = Math.round(raw);
+    const g = gradeFor(score);
+    const color = colorFor(score);
+
+    gauge.style.setProperty("--p", score);
+    gauge.style.setProperty("--gauge-color", color);
+
+    scoreVal.textContent = score;
+    bGpa.textContent = g.gpa.toFixed(2).replace(".", ",");
+    bLetter.textContent = g.letter;
+    bTrad.textContent = g.trad;
+    exact.textContent = "точный расчёт: " + fmt(raw) + "%";
+
+    if (score >= 70) {
+      scholarship.className = "scholarship ok";
+      scholarship.textContent = "🎓 Стипендия сохраняется (70% и выше)";
+    } else if (score >= 50) {
+      scholarship.className = "scholarship mid";
+      scholarship.textContent = "До стипендии не хватает " + (70 - score) + " б. — экзамен ещё может спасти";
+    } else {
+      scholarship.className = "scholarship bad";
+      scholarship.textContent = "Стипендия под угрозой: до 70% не хватает " + (70 - score) + " б.";
+    }
+
+    [...body.children].forEach((tr) => {
+      tr.classList.toggle("active", Number(tr.dataset.index) === SCALE.indexOf(g));
+    });
+
+    updateTarget(r1, r2, e);
+
+    localStorage.setItem("grade-calc", JSON.stringify({ r1, r2, e, target }));
+  }
+
+  function updateTarget(r1, r2, e) {
+    const base = 0.3 * r1 + 0.3 * r2;
+    const maxFinal = base + 40;
+    // Math.round(raw) >= target  <=>  raw >= target - 0.5
+    const need = (target - 0.5 - base) / 0.4;
+
+    if (need <= 0) {
+      targetNum.textContent = "✓";
+      targetNum.style.color = "var(--good)";
+      targetText.innerHTML =
+        `<b>Цель уже достигнута.</b> Даже с 0 за экзамен итог будет ` +
+        `<b>${Math.round(base)}%</b>.`;
+      return;
+    }
+
+    if (need > 100) {
+      targetNum.textContent = "—";
+      targetNum.style.color = "var(--bad)";
+      targetText.innerHTML =
+        `<b>Цель недостижима.</b> Максимум при 100 за экзамен — ` +
+        `<b>${Math.round(maxFinal)}%</b>, а нужно ${target}%.`;
+      return;
+    }
+
+    const examNeed = Math.ceil(need);
+    targetNum.textContent = examNeed;
+    targetNum.style.color = "var(--accent)";
+    targetText.innerHTML =
+      `Минимальный балл за экзамен — <b>${examNeed}</b> из 100, ` +
+      `чтобы итог был <b>${target}%</b> и выше.` +
+      `<span class="hint">Сейчас без экзамена набрано ${fmt(base)} б. из 70 возможных.</span>`;
+  }
+
+  pairs.forEach((p) => {
+    p.range.addEventListener("input", () => {
+      p.num.value = p.range.value;
+      update();
+    });
+    p.num.addEventListener("input", () => {
+      if (p.num.value === "") return;
+      update();
+    });
+    p.num.addEventListener("blur", () => {
+      p.num.value = clamp(Number(p.num.value));
+      update();
+    });
+  });
+
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      target = Number(chip.dataset.target);
+      chips.forEach((c) => c.classList.toggle("active", c === chip));
+      update();
+    });
+  });
+
+  $("reset").addEventListener("click", () => {
+    pairs.forEach((p) => { p.num.value = 0; });
+    update();
+  });
+
+  if (saved.r1 != null) pairs[0].num.value = clamp(saved.r1);
+  if (saved.r2 != null) pairs[1].num.value = clamp(saved.r2);
+  if (saved.e != null) pairs[2].num.value = clamp(saved.e);
+  chips.forEach((c) => c.classList.toggle("active", Number(c.dataset.target) === target));
+
+  update();
+})();
+</script>
+
+<script>
+  // Офлайн-режим: service worker работает только на http(s) (GitHub Pages, localhost).
+  if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
