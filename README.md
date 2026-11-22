@@ -27,10 +27,10 @@ python -m http.server 8123 --bind 0.0.0.0
 
 1. Создайте на GitHub пустой **публичный** репозиторий, например `ocenka`.
    Не добавляйте README и .gitignore при создании.
-2. В папке проекта выполните (подставьте свой ник и имя репозитория):
+2. В папке проекта выполните (подставьте свой ник, если он отличается от `mmuldagal`):
 
    ```powershell
-   git remote add origin https://github.com/ВАШ_НИК/ocenka.git
+   git remote add origin https://github.com/mmuldagal/ocenka.git
    git push -u origin main
    ```
 
@@ -39,7 +39,7 @@ python -m http.server 8123 --bind 0.0.0.0
 4. Через 1–2 минуты страница будет доступна по адресу:
 
    ```
-   https://ВАШ_НИК.github.io/ocenka/
+   https://mmuldagal.github.io/ocenka/
    ```
 
 ## Установка на телефон (PWA)
